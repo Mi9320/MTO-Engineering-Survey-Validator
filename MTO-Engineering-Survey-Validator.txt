@@ -1,0 +1,66 @@
+MTO-Engineering-Survey-Validator
+
+import arcpy
+import os
+import math
+import sys
+
+input_cad = r""C:\path\to\submission.dwg"
+
+mto_master_fc = r"C:\path\to\master.gdb\Control_Points"
+
+
+REQUIRED_WKID = 3160
+
+
+
+print(" Starting MTO Engineering Validation...")
+
+desc = arcpy.Describe(input_cad)
+sr = desc.spatialReference
+
+if sr.factorycode != REQUIRED_WKID:
+    print(f"[CRITICAL FAIL] PROJECTION ERROR.FOUND: {sr.factorycode}. Expected: {REQUIRED_WKID}.\n")
+    print(" script stopped.wrong projection.")
+
+    exit()
+
+else:
+    print(f"[PASS] Projection Verified: {sr.name}\n")
+    print("Projection Good.")
+
+cad_point_layer = os.path.join(input_cad, "Point")
+print("1. Loading Master Points into RAM....")
+master_points = []
+
+with arcpy.da.SearchCursor(mto_master_fc, [ "SHAPE@XY", "Monument_ID"]) as cursor:
+    for row in cursor:
+        master_points.append(row)
+
+print(f" Loaded {len(master_points)} master points.")
+print("2. Checking CAD Points....")
+
+with arcpy.da.SearchCursor(cad_point_layer, ["SHAPE@XY", "RefName"]) as cursor:
+    for row in cursor:
+        cad_xy = row[0]
+        cad_id = row[1]
+        
+        nearest_dist = 999999 
+        match_id = "Unknown"
+
+        for mto in master_points:
+            mto_xy = mto[0]
+            
+            diff_x = cad_xy[0] - mto_xy[0]
+            diff_y = cad_xy[1] - mto_xy[1]
+            
+
+            dist = math.sqrt(diff_x**2 + diff_y**2)
+            
+            if dist < nearest_dist:
+                nearest_dist = dist
+                match_id = mto[1]
+        if nearest_dist <= 0.05:
+            print(f"PASS: {cad_id} matches {match_id} (Diff: {round(nearest_dist,3)}m)")
+        else:
+            print(f"FAIL: {cad_id} is OFF by {round(nearest_dist,3)}m")
