@@ -35,4 +35,4 @@ MTO ENGINEERING SURVEY QA REPORT
 
 ## 👤 Author
 **Mirza Ibrahim**
-*GIS Technician / Geomatics Specialist*
+*GIS Technician / Geomatics Technician*
