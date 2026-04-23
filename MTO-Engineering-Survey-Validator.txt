@@ -4,6 +4,7 @@ import arcpy
 import os
 import math
 import sys
+from scipy.spatial import cKDTree  # <-- NEW: Imports the spatial index engine
 
 input_cad = r""C:\path\to\submission.dwg"
 
@@ -64,3 +65,4 @@ with arcpy.da.SearchCursor(cad_point_layer, ["SHAPE@XY", "RefName"]) as cursor:
             print(f"PASS: {cad_id} matches {match_id} (Diff: {round(nearest_dist,3)}m)")
         else:
             print(f"FAIL: {cad_id} is OFF by {round(nearest_dist,3)}m")
+print("\nValidation Complete.")
